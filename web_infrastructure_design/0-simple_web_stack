@@ -1,0 +1,23 @@
+# Simple Web Stack: 1-Server Web Infrastructure
+
+## 1. The Request Flow
+When a user wants to access our website, they open their browser and type the URL `www.foobar.com`. 
+First, the browser needs to know where this website is hosted, so it contacts a DNS (Domain Name System) server to resolve the domain name into an IP address. The DNS server finds the record for `www.foobar.com` and returns the IP address `8.8.8.8`. 
+Now, the user's computer makes an HTTP request directly to the server located at `8.8.8.8`. 
+The Web Server (Nginx) running on that IP receives the request. If the user asks for a static file (like an image or basic HTML), Nginx serves it directly. If the request requires dynamic content, Nginx forwards the request to the Application Server. The Application Server runs the Application Files (our code base) and, if necessary, queries the Database (MySQL) to fetch or store data. Once the application finishes processing, it sends the result back to Nginx, which then sends the final web page back to the user's browser.
+
+## 2. Infrastructure Specifics
+
+* **What is a server:** A server is a specialized computer (hardware) or a software program that provides services, resources, or data to other computers (clients) over a network.
+* **What is the role of the domain name:** The domain name provides a human-readable and memorable address (like foobar.com) so users do not have to memorize complex numerical IP addresses (like 8.8.8.8).
+* **What type of DNS record `www` is in `www.foobar.com`:** It is an **A record** (Address record) because it points directly to an IPv4 address (8.8.8.8).
+* **What is the role of the web server (Nginx):** The web server handles incoming HTTP/HTTPS requests from users, serves static content (HTML, CSS, images), and acts as a reverse proxy by forwarding dynamic requests to the application server.
+* **What is the role of the application server:** The application server executes the core business logic of the website, interacts with the code base, processes user inputs, and communicates with the database to generate dynamic content.
+* **What is the role of the database (MySQL):** The database is responsible for securely storing, organizing, and retrieving structured data (e.g., user credentials, website content, logs) for the application.
+* **What the server uses to communicate with the user's computer:** The communication happens over the Internet using the **HTTP** (Hypertext Transfer Protocol) or **HTTPS** protocols, built on top of TCP/IP.
+
+## 3. Issues with This Infrastructure
+
+* **SPOF (Single Point of Failure):** Since all components (web server, app server, database) are hosted on one single server, if this server crashes, loses power, or experiences hardware failure, the entire website goes offline. There is no backup or redundancy.
+* **Downtime when maintenance is needed:** Because everything is on one server, deploying new code or making configuration changes often requires restarting services (like the Nginx web server or the application server). During this restart process, the website will be temporarily unavailable to users (downtime).
+* **Cannot scale if too much incoming traffic:** A single server has limited hardware resources (CPU, RAM, storage). If there is a sudden spike in user traffic, the server will quickly become overloaded and unable to handle the requests, resulting in slow response times or total failure.
