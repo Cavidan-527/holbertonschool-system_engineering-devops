@@ -1,0 +1,18 @@
+# Scaled Up Web Infrastructure
+
+## 1. Additional Elements and Their Purpose
+
+* **1 Additional Load Balancer (HAproxy cluster):** We added a second HAproxy load balancer to form a High Availability (HA) cluster. 
+  * **Why:** In our previous setup, the single load balancer was a Single Point of Failure (SPOF). By adding a second one and configuring them as a cluster (often using Keepalived with a Virtual IP), we ensure that if the active load balancer crashes, the passive one instantly takes over. This guarantees continuous availability of the website.
+
+* **Splitting Components (Web Server, App Server, Database) into Dedicated Servers:** Instead of having the Web Server, Application Server, and Database all running on the same machine, we have split them onto their own individual, dedicated servers (forming separate clusters or tiers). We added new servers to accommodate this separated architecture.
+  * **Why:** 1. **Independent Scaling:** Different components have different resource needs. Databases usually need more RAM and Disk I/O, while Web Servers need more CPU and Network capacity. Splitting them allows us to scale only the component that needs it (e.g., adding more App Servers without buying unnecessary DB licenses).
+    2. **Resource Contention Prevention:** In a monolithic setup, a heavy database query could consume 100% of the CPU, causing the Web Server to stop responding. Splitting them isolates the resources, so a heavy load on the App Server doesn't affect the Database's performance.
+    3. **Security:** By separating the Database onto its own server, we can place it deep inside a private network, completely inaccessible from the public internet, adding a strong layer of security.
+
+## 2. The New Architecture Flow
+1. **DNS & VIP:** The domain `www.foobar.com` points to a Virtual IP (VIP).
+2. **HA Load Balancers:** The VIP is shared between our Active and Passive HAProxy load balancers.
+3. **Web Tier:** The active load balancer forwards HTTP/HTTPS traffic to a cluster of dedicated Web Servers (Nginx).
+4. **App Tier:** The Web Servers act as reverse proxies, sending dynamic requests to a cluster of dedicated Application Servers.
+5. **Database Tier:** The Application Servers perform business logic and send Read/Write queries to the dedicated Database Servers (MySQL Primary-Replica cluster).

@@ -1,0 +1,18 @@
+# Secured and Monitored Web Infrastructure
+
+## 1. Additional Elements and Their Purpose
+* **3 Firewalls:** Added to protect the servers from malicious external access. A firewall acts as a barrier that monitors and controls incoming and outgoing network traffic based on predetermined security rules (e.g., only allowing ports 80, 443, and 22). One firewall is placed on the Load Balancer, and one on each of the two backend servers.
+* **1 SSL Certificate:** Added to serve `www.foobar.com` over HTTPS. This encrypts the data transmitted between the user's browser and our servers, ensuring privacy and protecting sensitive information from being intercepted (Man-in-the-Middle attacks).
+* **3 Monitoring Clients:** Added to track the health, performance, and uptime of the servers. One agent is installed on the Load Balancer, and one on each backend server. It helps in proactively identifying issues before they cause downtime.
+
+## 2. Infrastructure Specifics
+* **What are firewalls for:** Firewalls are security systems designed to prevent unauthorized access to or from a private network. They filter traffic based on IP addresses, protocols, and ports, dropping malicious or unneeded packets.
+* **Why the traffic is served over HTTPS:** HTTPS (Hypertext Transfer Protocol Secure) ensures that all communication between the client and the server is encrypted using SSL/TLS. This guarantees data confidentiality, data integrity, and server authentication.
+* **What monitoring is used for:** Monitoring is used to continuously observe system resources (CPU, RAM, Disk space), track application errors, analyze log files, and alert system administrators automatically if something fails or performs poorly.
+* **How the monitoring tool is collecting data:** A monitoring client (agent software like Datadog or SumoLogic) runs as a background process on the server. It continuously reads system metrics and parses server log files, then transmits this data over the network via an API to a centralized monitoring dashboard.
+* **How to monitor your web server QPS:** To monitor Queries Per Second (QPS) on Nginx, you configure the monitoring agent to read and parse the Nginx `access.log`. The agent counts the number of HTTP requests recorded in the log per second and sends this metric to the monitoring dashboard to be visualized as a graph.
+
+## 3. Issues with This Infrastructure
+* **Why terminating SSL at the load balancer level is an issue:** If SSL is terminated (decrypted) at the load balancer, the traffic sent from the load balancer to the backend servers travels over the internal network in plain text (HTTP). If an attacker breaches the internal network, they can easily intercept and read this unencrypted data.
+* **Why having only one MySQL server capable of accepting writes is an issue:** The single Primary database node is a Single Point of Failure (SPOF) for all write operations. If this Primary server goes down, the application completely loses the ability to save, update, or delete data until the server is fixed or a replica is manually promoted.
+* **Why having servers with all the same components is a problem:** Hosting the web server, application server, and database all on the same machine leads to resource contention (they fight for the same CPU, RAM, and Disk I/O). It also makes independent scaling impossible; if your database needs more memory, you are forced to scale the entire server, wasting resources on the web and app components that do not need scaling.
