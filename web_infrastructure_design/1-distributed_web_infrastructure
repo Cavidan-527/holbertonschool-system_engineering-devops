@@ -1,0 +1,23 @@
+# Distributed Web Infrastructure: 3-Server Setup
+
+## 1. Additional Elements and Their Purpose
+* **HAProxy (Load Balancer):** Added to distribute incoming HTTP/HTTPS requests across multiple backend servers. This prevents a single server from being overwhelmed by traffic, improves response times, and provides redundancy.
+* **Extra Servers (Server 1 & Server 2):** Instead of one server, we now have two identical servers hosting the web server, application server, and codebase. This provides horizontal scaling and fault tolerance. If one server crashes, the other can continue serving users.
+
+## 2. Load Balancer Specifics
+* **Distribution Algorithm:** The HAProxy load balancer is configured with the **Round Robin** algorithm. This algorithm works by sequentially distributing incoming requests to each server in the pool. For example, Request 1 goes to Server A, Request 2 goes to Server B, Request 3 goes back to Server A, and so on.
+* **Active-Active vs. Active-Passive Setup:** * This specific load balancer setup is enabling an **Active-Active** setup.
+    * **Difference:** In an **Active-Active** setup, both Server 1 and Server 2 are actively receiving and processing incoming traffic simultaneously. In an **Active-Passive** setup, Server 1 would handle 100% of the traffic while Server 2 remains on standby. Server 2 would only start receiving traffic if Server 1 completely fails (failover).
+
+## 3. Database Cluster Specifics
+* **How a Primary-Replica (Master-Slave) cluster works:** In this setup, one database acts as the Primary (Master) and the other acts as the Replica (Slave). The Primary database handles all data modifications. Any changes made to the Primary are asynchronously or synchronously synchronized (copied) to the Replica database.
+* **Difference in regard to the application:** The application connects to the databases differently based on the operation. The application sends all **write** queries (INSERT, UPDATE, DELETE) exclusively to the **Primary** node. It sends all **read** queries (SELECT) to the **Replica** node. This separation of read/write operations significantly improves database performance.
+
+## 4. Issues with This Infrastructure
+* **Where are the SPOF (Single Points of Failure):**
+    * **The Load Balancer:** We only have one HAProxy server. If it crashes or loses power, no traffic can reach the web servers, bringing the entire site offline.
+    * **The Primary Database:** If the Primary database node fails, the application will no longer be able to write or update data (though it might still be able to read from the Replica).
+* **Security Issues:**
+    * **No Firewall:** There is no firewall configured to block unwanted traffic. This leaves ports exposed to potential malicious attacks from the internet.
+    * **No HTTPS:** Traffic is routed over unencrypted HTTP. This means sensitive user data (like passwords or session cookies) is sent in plain text and can be easily intercepted by attackers.
+* **No Monitoring:** There is no system in place to track the health of the servers, database synchronization, or traffic loads. If a server goes down or runs out of memory, the system administrators will not be alerted automatically.
